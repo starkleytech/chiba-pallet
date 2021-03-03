@@ -50,7 +50,7 @@ type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Con
 #[derive(Encode, Decode, Debug, Clone, Eq, PartialEq)]
 pub enum ReportReason {
 	None,
-	Illigal,
+	Illegal,
 	Plagiarism,
 	Duplicate,
 	Reported
@@ -251,7 +251,7 @@ decl_module! {
 
 		fn deposit_event() = default;
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn create_collection(origin) -> DispatchResult {
 			let _who = ensure_signed(origin)?;
 			let collection_id = nft::Module::<T>::create_class(&_who, T::DefaultClassMetadata::get(), T::DefaultClassData::get())?;
@@ -261,7 +261,7 @@ decl_module! {
 			Ok(())
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn mint(origin,
 				collection_id: T::ClassId,
 				ipfs_pin: T::TokenData) -> DispatchResult {
@@ -285,7 +285,7 @@ decl_module! {
 			Ok(())
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn burn(origin,
 				collection_id: T::ClassId,
 				token_id: T::TokenId) -> DispatchResult {
@@ -305,7 +305,7 @@ decl_module! {
 			Ok(())
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn transfer(origin,
 				collection_id: T::ClassId,
 				token_id: T::TokenId,
@@ -322,7 +322,7 @@ decl_module! {
 			Ok(())
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn create_offer(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
@@ -339,7 +339,7 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn accept_offer(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
@@ -356,7 +356,7 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn cancel_offer(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId) -> DispatchResult {
@@ -372,7 +372,7 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn appreciate(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
@@ -391,8 +391,8 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
-		pub fn toogle_display(origin,
+		#[weight = T::BlockWeights::get().max_block / 100]
+		pub fn toggle_display(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
 			display: bool) -> DispatchResult {
@@ -415,7 +415,7 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn report(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
@@ -438,7 +438,7 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn accept_report(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId) -> DispatchResult {
@@ -461,7 +461,7 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn clear_report(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId) -> DispatchResult {
@@ -484,7 +484,7 @@ decl_module! {
 			Ok(())	
 		}
 
-		#[weight = 0]
+		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn set_curator(origin,
 			curator: T::AccountId) -> DispatchResult {
 			let _who = ensure_root(origin)?;
