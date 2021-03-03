@@ -36,14 +36,14 @@ use frame_support::traits::{
 };
 use sp_runtime::traits::Saturating;
 use frame_system::{ ensure_signed, ensure_root };
-use orml_nft::{self as nft};
+pub use orml_nft::{self as nft};
 // use pallet_atomic_swap::{self as atomic_swap};
 use sp_runtime::{ 	
 	traits::{AtLeast32BitUnsigned, Member, Zero},
 	DispatchResult, };
 use sp_std::prelude::*;
 
-const PALLET_ID: LockIdentifier = *b"gallery ";
+//const PALLET_ID: LockIdentifier = *b"gallery ";
 
 type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
@@ -82,23 +82,11 @@ decl_error! {
 	}
 }
 
-pub trait Config: frame_system::Config + nft::Config  { //+ atomic_swap::Config
+pub trait Config: frame_system::Config + nft::Config + pallet_atomic_swap::Config {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
-
 	/// The currency trait.
 	type Currency: LockableCurrency<Self::AccountId>;
 
-	/// Token default cost.
-	type DefaultCost: Get<BalanceOf<Self>>;
-
-	/// Default class data.
-	type DefaultClassData: Get<Self::ClassData>;
-
-	/// Default class metadata.
-	type DefaultClassMetadata: Get<Vec<u8>>;
-
-	/// Default token metadata.
-	type DefaultTokenMetadata: Get<Vec<u8>>;
 }
 
 decl_event!(
@@ -252,9 +240,9 @@ decl_module! {
 		fn deposit_event() = default;
 
 		#[weight = T::BlockWeights::get().max_block / 100]
-		pub fn create_collection(origin) -> DispatchResult {
+		pub fn create_collection(origin, metadata: Vec<u8>, class_data: T::ClassData) -> DispatchResult {
 			let _who = ensure_signed(origin)?;
-			let collection_id = nft::Module::<T>::create_class(&_who, T::DefaultClassMetadata::get(), T::DefaultClassData::get())?;
+			let collection_id = nft::Module::<T>::create_class(&_who, metadata, class_data)?;
 
 			Self::deposit_event(RawEvent::CollectionCreated(collection_id));
 
@@ -264,7 +252,9 @@ decl_module! {
 		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn mint(origin,
 				collection_id: T::ClassId,
-				ipfs_pin: T::TokenData) -> DispatchResult {
+				metadata: Vec<u8>,
+				token_data: T::TokenData
+			) -> DispatchResult {
 			let _who = ensure_signed(origin)?;
 
 			// collection exists check
@@ -276,9 +266,9 @@ decl_module! {
 			ensure!(!balance.is_zero(), Error::<T>::BalanceNotEnough);
 
 		    //	let locked = balance.saturating_sub(T::DefaultCost::get());	
-
-			T::Currency::set_lock(PALLET_ID, &_who, T::DefaultCost::get(), WithdrawReasons::all());
-			let token_id = nft::Module::<T>::mint(&_who, collection_id, T::DefaultTokenMetadata::get(), ipfs_pin)?;
+			// why?
+			//T::Currency::set_lock(PALLET_ID, &_who, T::DefaultCost::get(), WithdrawReasons::all());
+			let token_id = nft::Module::<T>::mint(&_who, collection_id, metadata, token_data)?;
 
 			Self::deposit_event(RawEvent::NFTCreated(collection_id, token_id));
 
@@ -296,8 +286,8 @@ decl_module! {
 
 			ensure!(Curator::<T>::get() == _who || collection.owner == _who, 
 				Error::<T>::MustBeCollectionOwnerOrCurator);
-
-			T::Currency::remove_lock(PALLET_ID, &_who);
+			// doesn't make sense - the burn could be by a different person than the lock.
+			//T::Currency::remove_lock(PALLET_ID, &_who);
 			nft::Module::<T>::burn(&_who, (collection_id, token_id))?;	
 
 			Self::deposit_event(RawEvent::NFTBurned(collection_id, token_id));

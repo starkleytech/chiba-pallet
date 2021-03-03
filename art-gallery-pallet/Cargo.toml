@@ -20,9 +20,6 @@ pallet-atomic-swap = { version = "3.0.0", default-features = false }
 orml-traits = { version = "0.4.0", default-features = false }
 orml-nft = { version = "0.4.0", default-features = false }
 
-[dev-dependencies]
-#clear_on_drop = { version = "0.2.4", features = ["no_cc"] }	# https://github.com/paritytech/substrate/issues/4179
-
 [features]
 default = ["std"]
 std = [
