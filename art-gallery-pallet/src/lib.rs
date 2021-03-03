@@ -24,6 +24,12 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 use codec::{Decode, Encode};
 use frame_support::{ 
 	decl_error, decl_event, decl_module, 
@@ -39,9 +45,11 @@ use frame_system::{ ensure_signed, ensure_root };
 pub use orml_nft::{self as nft};
 // use pallet_atomic_swap::{self as atomic_swap};
 use sp_runtime::{ 	
+	RuntimeDebug,
 	traits::{AtLeast32BitUnsigned, Member, Zero},
 	DispatchResult, };
 use sp_std::prelude::*;
+use sp_std::marker::PhantomData;
 
 //const PALLET_ID: LockIdentifier = *b"gallery ";
 
@@ -228,6 +236,7 @@ decl_storage! {
 		pub Curator: T::AccountId;
 
 		/// Returns `None` if info not set or removed.
+		/// Should really be refactored to store this info in T::TokenData
 		pub TokenExtendedInfo get(fn token_extended_info): double_map hasher(twox_64_concat) T::ClassId, hasher(twox_64_concat) T::TokenId => Option<ExtendedInfo>;
 
 	}
@@ -484,4 +493,36 @@ decl_module! {
 			Ok(())	
 		}
 	}
+}
+
+
+#[derive(Clone, Eq, PartialEq, RuntimeDebug, Encode, Decode)]
+pub struct GallerySwapAction<T: Config>{
+	collection_id: T::ClassId,
+	token_id: T::TokenId
+}
+
+impl<T: Config> pallet_atomic_swap::SwapAction<<T as frame_system::Config>::AccountId, T> for GallerySwapAction<T> 
+{
+    fn reserve(&self, source: &<T as frame_system::Config>::AccountId) -> frame_support::dispatch::DispatchResult {
+		if let Some(token) = nft::Module::<T>::tokens(self.collection_id, self.token_id){
+			ensure!(token.owner == *source, Error::<T>::MustBeTokenOwner);
+			
+		} else {
+			fail!(Error::<T>::TokenNotFound)
+		}
+		Ok(())
+    }
+
+    fn claim(&self, source: &<T as frame_system::Config>::AccountId, target: &<T as frame_system::Config>::AccountId) -> bool {
+        todo!()
+    }
+
+    fn weight(&self) -> frame_support::dispatch::Weight {
+        todo!()
+    }
+
+    fn cancel(&self, source: &<T as frame_system::Config>::AccountId) {
+        todo!()
+    }
 }
