@@ -1,42 +1,28 @@
 [workspace]
 members = [
-	"node",
-	"runtime",
-    "auction",
-	"authority",
-	"benchmarking",
-	"currencies",
-	"gradually-update",
-	"oracle",
-	"tokens",
-	"traits",
-	"utilities",
-	"vesting",
-	"rewards",
-	"nft",
     "art-gallery-pallet",
 ]
 
 
 [patch.crates-io]
-frame-benchmarking = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-frame-support = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-pallet-balances = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-pallet-elections-phragmen = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-pallet-scheduler = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-pallet-treasury = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-api = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-application-crypto = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-arithmetic = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-inherents = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-io = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-runtime-interface = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-std = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-trie = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
-sp-version = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.28" }
+frame-benchmarking = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+frame-support = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+pallet-balances = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+pallet-elections-phragmen = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+pallet-scheduler = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+pallet-treasury = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-api = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-application-crypto = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-arithmetic = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-inherents = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-io = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-runtime-interface = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-std = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-trie = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
+sp-version = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.8.29" }
 
 # The list of dependencies below (which can be both direct and indirect dependencies) are crates
 # that are suspected to be CPU-intensive, and that are unlikely to require debugging (as some of
