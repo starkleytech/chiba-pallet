@@ -31,15 +31,12 @@ mod mock;
 mod tests;
 
 use codec::{Decode, Encode};
-use frame_support::{ 
-	decl_error, decl_event, decl_module, 
-	decl_storage, ensure, fail, 
-	Parameter,  
-};
+use frame_support::{Parameter, decl_error, decl_event, decl_module, decl_storage, ensure, fail, traits::ReservableCurrency};
 use frame_support::traits::{
 	Currency, LockableCurrency, LockIdentifier, WithdrawReasons,
-	Get, ExistenceRequirement,
+	Get, ExistenceRequirement, BalanceStatus
 };
+use pallet_atomic_swap::SwapAction;
 use sp_runtime::traits::Saturating;
 use frame_system::{ ensure_signed, ensure_root };
 pub use orml_nft::{self as nft};
@@ -68,15 +65,18 @@ pub enum ReportReason {
 pub struct ExtendedInfo {
     pub display_flag: bool,
     pub report: ReportReason,
+	pub frozen: bool
 }
 
 decl_error! {
 	/// Error for art gallery
 	pub enum Error for Module<T: Config> {
-		/// Collection does't exists
+		/// Collection doesn't exist
 		CollectionNotFound,
-		/// Token doesn't exists
+		/// Token doesn't exist
 		TokenNotFound,
+		/// Offer doesn't exist
+		OfferNotFound,
 		/// Sender should equal token owner
 		MustBeTokenOwner,
 		/// Sender should be collection owner
@@ -87,13 +87,15 @@ decl_error! {
 		MustBeCurator,
 		/// Specified amount is above sender balance
 		BalanceNotEnough,
+		/// Token Frozen for Swap
+		TokenFrozen
 	}
 }
 
 pub trait Config: frame_system::Config + nft::Config + pallet_atomic_swap::Config {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 	/// The currency trait.
-	type Currency: LockableCurrency<Self::AccountId>;
+	type Currency: ReservableCurrency<Self::AccountId>;
 
 }
 
@@ -239,6 +241,8 @@ decl_storage! {
 		/// Should really be refactored to store this info in T::TokenData
 		pub TokenExtendedInfo get(fn token_extended_info): double_map hasher(twox_64_concat) T::ClassId, hasher(twox_64_concat) T::TokenId => Option<ExtendedInfo>;
 
+		/// Returns `None` if a given account has no offer on a given Token.
+		pub Offers get(fn offer): double_map hasher(twox_64_concat) (T::ClassId, T::TokenId), hasher(twox_64_concat) T::AccountId => Option<BalanceOf<T>>;
 	}
 }
 
@@ -250,8 +254,8 @@ decl_module! {
 
 		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn create_collection(origin, metadata: Vec<u8>, class_data: T::ClassData) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-			let collection_id = nft::Module::<T>::create_class(&_who, metadata, class_data)?;
+			let who = ensure_signed(origin)?;
+			let collection_id = nft::Module::<T>::create_class(&who, metadata, class_data)?;
 
 			Self::deposit_event(RawEvent::CollectionCreated(collection_id));
 
@@ -264,20 +268,18 @@ decl_module! {
 				metadata: Vec<u8>,
 				token_data: T::TokenData
 			) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// collection exists check
 			let collection = nft::Module::<T>::classes(collection_id).ok_or(Error::<T>::CollectionNotFound)?;
 
-			ensure!(collection.owner == _who, Error::<T>::MustBeCollectionOwner);
+			ensure!(collection.owner == who, Error::<T>::MustBeCollectionOwner);
 
-			let balance = T::Currency::free_balance(&_who);
-			ensure!(!balance.is_zero(), Error::<T>::BalanceNotEnough);
 
-		    //	let locked = balance.saturating_sub(T::DefaultCost::get());	
-			// why?
-			//T::Currency::set_lock(PALLET_ID, &_who, T::DefaultCost::get(), WithdrawReasons::all());
-			let token_id = nft::Module::<T>::mint(&_who, collection_id, metadata, token_data)?;
+			//T::Currency::set_lock(PALLET_ID, &who, T::DefaultCost::get(), WithdrawReasons::all());
+			// agree there needs to be some cost but I'm not certain it should be via lock since tokens
+			// are transferrable
+			let token_id = nft::Module::<T>::mint(&who, collection_id, metadata, token_data)?;
 
 			Self::deposit_event(RawEvent::NFTCreated(collection_id, token_id));
 
@@ -288,16 +290,23 @@ decl_module! {
 		pub fn burn(origin,
 				collection_id: T::ClassId,
 				token_id: T::TokenId) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// collection exists check
 			let collection = nft::Module::<T>::classes(collection_id).ok_or(Error::<T>::CollectionNotFound)?;
 
-			ensure!(Curator::<T>::get() == _who || collection.owner == _who, 
+			ensure!(Curator::<T>::get() == who || collection.owner == who, 
 				Error::<T>::MustBeCollectionOwnerOrCurator);
+			
+			let info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
+				display_flag: false,
+				report: ReportReason::None,
+				frozen: false
+			});
+			ensure!(info.frozen == false, Error::<T>::TokenFrozen);
 			// doesn't make sense - the burn could be by a different person than the lock.
-			//T::Currency::remove_lock(PALLET_ID, &_who);
-			nft::Module::<T>::burn(&_who, (collection_id, token_id))?;	
+			//T::Currency::remove_lock(PALLET_ID, &who);
+			nft::Module::<T>::burn(&who, (collection_id, token_id))?;	
 
 			Self::deposit_event(RawEvent::NFTBurned(collection_id, token_id));
 
@@ -309,13 +318,19 @@ decl_module! {
 				collection_id: T::ClassId,
 				token_id: T::TokenId,
 				recipient: T::AccountId) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// token exists check
 			let token = nft::Module::<T>::tokens(collection_id, token_id).ok_or(Error::<T>::TokenNotFound)?;
-			ensure!(token.owner == _who, Error::<T>::MustBeTokenOwner);
+			ensure!(token.owner == who, Error::<T>::MustBeTokenOwner);
+			let info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
+				display_flag: false,
+				report: ReportReason::None,
+				frozen: false
+			});
+			ensure!(info.frozen == false, Error::<T>::TokenFrozen);
 
-			nft::Module::<T>::transfer(&_who, &recipient, (collection_id, token_id))?;	
+			nft::Module::<T>::transfer(&who, &recipient, (collection_id, token_id))?;	
 			Self::deposit_event(RawEvent::Transfer(collection_id, token_id, recipient));
 
 			Ok(())
@@ -326,16 +341,11 @@ decl_module! {
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
 			price: BalanceOf<T>) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Event
-			// 	OfferCreated
-			// 		Collection ID
-			// 		Token ID
-			// 		Price
-			// 		Buyer Address
-
-			Ok(())	
+			let who = ensure_signed(origin)?;
+			T::Currency::reserve(&who, price)?; 
+			Offers::<T>::insert((collection_id, token_id), who.clone(), price);
+			Self::deposit_event(RawEvent::OfferCreated(collection_id, token_id, price, who));
+			Ok(())
 		}
 
 		#[weight = T::BlockWeights::get().max_block / 100]
@@ -343,15 +353,23 @@ decl_module! {
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
 			buyer_address: T::AccountId) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Event
-			// 	OfferAccepted
-			// 		Collection ID
-			// 		Token ID
-			// 		Seller Address
-			// 		Buyer Address
-
+			let who = ensure_signed(origin)?;
+			let token = nft::Module::<T>::tokens(collection_id, token_id).ok_or(Error::<T>::TokenNotFound)?;
+			ensure!(token.owner == who, Error::<T>::MustBeTokenOwner);
+			let info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
+				display_flag: false,
+				report: ReportReason::None,
+				frozen: false
+			});
+			ensure!(info.frozen == false, Error::<T>::TokenFrozen);
+			if let Some(offer) = Offers::<T>::get((collection_id, token_id), buyer_address.clone()){
+				T::Currency::repatriate_reserved(&buyer_address, &who, offer, BalanceStatus::Free)?;
+				Offers::<T>::remove((collection_id, token_id), who.clone());
+				nft::Module::<T>::transfer(&who, &buyer_address, (collection_id, token_id))?;
+				Self::deposit_event(RawEvent::AcceptOffer(collection_id, token_id, who, buyer_address));
+			} else {
+				fail!(Error::<T>::OfferNotFound);
+			}
 			Ok(())	
 		}
 
@@ -359,16 +377,16 @@ decl_module! {
 		pub fn cancel_offer(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Event
-			// 	OfferCanceled
-			// 		Collection ID
-			// 		Token ID
-			// 		Seller Address
-			// 		Buyer Address
-
-			Ok(())	
+			let who = ensure_signed(origin)?;
+			let token = nft::Module::<T>::tokens(collection_id, token_id).ok_or(Error::<T>::TokenNotFound)?;
+			if let Some(offer) = Offers::<T>::get((collection_id, token_id), who.clone()){
+				T::Currency::unreserve(&who, offer); 
+				Offers::<T>::remove((collection_id, token_id), who.clone());
+				Self::deposit_event(RawEvent::CancelOffer(collection_id, token_id, token.owner, who));
+				Ok(())
+			} else {
+				fail!(Error::<T>::OfferNotFound);
+			}
 		}
 
 		#[weight = T::BlockWeights::get().max_block / 100]
@@ -376,15 +394,15 @@ decl_module! {
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
 			amount: BalanceOf<T>) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// token exists check
 			let token = nft::Module::<T>::tokens(collection_id, token_id).ok_or(Error::<T>::TokenNotFound)?;
 
-			let balance = T::Currency::free_balance(&_who);
+			let balance = T::Currency::free_balance(&who);
 			ensure!(balance >= amount, Error::<T>::BalanceNotEnough);
 
-			T::Currency::transfer(&_who, &token.owner, amount, ExistenceRequirement::AllowDeath)?;
+			T::Currency::transfer(&who, &token.owner, amount, ExistenceRequirement::AllowDeath)?;
 			Self::deposit_event(RawEvent::AppreciationReceived(collection_id, token_id, amount));
 
 			Ok(())	
@@ -395,16 +413,17 @@ decl_module! {
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
 			display: bool) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// token exists check
 			let token = nft::Module::<T>::tokens(collection_id, token_id).ok_or(Error::<T>::TokenNotFound)?;
-			ensure!(token.owner == _who, Error::<T>::MustBeTokenOwner);
+			ensure!(token.owner == who, Error::<T>::MustBeTokenOwner);
 
 			// get token info
 			let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
 				display_flag: false,
 				report: ReportReason::None,
+				frozen: false
 			});
 			info.display_flag = display;
 
@@ -419,7 +438,7 @@ decl_module! {
 			collection_id: T::ClassId,
 			token_id: T::TokenId,
 			reason: ReportReason) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// token exists check
 			ensure!(nft::Module::<T>::tokens(collection_id, token_id).is_some(), Error::<T>::TokenNotFound);
@@ -428,6 +447,7 @@ decl_module! {
 			let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
 				display_flag: false,
 				report: ReportReason::None,
+				frozen: false
 			});
 			info.report = reason.clone();
 
@@ -441,17 +461,18 @@ decl_module! {
 		pub fn accept_report(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// token exists check
 			ensure!(nft::Module::<T>::tokens(collection_id, token_id).is_some(), Error::<T>::TokenNotFound);
 
-			ensure!(Curator::<T>::get() == _who, Error::<T>::MustBeCurator);
+			ensure!(Curator::<T>::get() == who, Error::<T>::MustBeCurator);
 
 			// get token info
 			let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
 				display_flag: false,
 				report: ReportReason::None,
+				frozen: false
 			});
 			info.report = ReportReason::Reported;
 
@@ -464,17 +485,18 @@ decl_module! {
 		pub fn clear_report(origin,
 			collection_id: T::ClassId,
 			token_id: T::TokenId) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+			let who = ensure_signed(origin)?;
 
 			// token exists check
 			ensure!(nft::Module::<T>::tokens(collection_id, token_id).is_some(), Error::<T>::TokenNotFound);
 
-			ensure!(Curator::<T>::get() == _who, Error::<T>::MustBeCurator);
+			ensure!(Curator::<T>::get() == who, Error::<T>::MustBeCurator);
 
 			// get token info
 			let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
 				display_flag: false,
 				report: ReportReason::None,
+				frozen: false
 			});
 			info.report = ReportReason::Reported;
 
@@ -486,7 +508,7 @@ decl_module! {
 		#[weight = T::BlockWeights::get().max_block / 100]
 		pub fn set_curator(origin,
 			curator: T::AccountId) -> DispatchResult {
-			let _who = ensure_root(origin)?;
+			let _ = ensure_root(origin)?;
 
 			Curator::<T>::put(curator);	
 
@@ -507,7 +529,16 @@ impl<T: Config> pallet_atomic_swap::SwapAction<<T as frame_system::Config>::Acco
     fn reserve(&self, source: &<T as frame_system::Config>::AccountId) -> frame_support::dispatch::DispatchResult {
 		if let Some(token) = nft::Module::<T>::tokens(self.collection_id, self.token_id){
 			ensure!(token.owner == *source, Error::<T>::MustBeTokenOwner);
-			
+			// get token info
+			let mut info = TokenExtendedInfo::<T>::get(self.collection_id, self.token_id).unwrap_or_else(|| ExtendedInfo {
+				display_flag: false,
+				report: ReportReason::None,
+				frozen: false
+			});
+			// if token is already frozen, it is already being used in a swap!
+			ensure!(info.frozen == false, Error::<T>::TokenFrozen);
+			info.frozen = true;
+			TokenExtendedInfo::<T>::insert(self.collection_id, self.token_id, info);
 		} else {
 			fail!(Error::<T>::TokenNotFound)
 		}
@@ -515,14 +546,35 @@ impl<T: Config> pallet_atomic_swap::SwapAction<<T as frame_system::Config>::Acco
     }
 
     fn claim(&self, source: &<T as frame_system::Config>::AccountId, target: &<T as frame_system::Config>::AccountId) -> bool {
-        todo!()
+        if let Some(token) = nft::Module::<T>::tokens(self.collection_id, self.token_id){
+			if token.owner == *source {
+				nft::Module::<T>::transfer(source, target, (self.collection_id, self.token_id)).is_ok()
+			} else {
+				false
+			}
+		} else {
+			false
+		}
     }
 
     fn weight(&self) -> frame_support::dispatch::Weight {
-        todo!()
+		//TODO
+        T::BlockWeights::get().max_block / 50
     }
 
     fn cancel(&self, source: &<T as frame_system::Config>::AccountId) {
-        todo!()
+        if let Some(token) = nft::Module::<T>::tokens(self.collection_id, self.token_id){
+			if token.owner == *source {
+				// get token info
+				let mut info = TokenExtendedInfo::<T>::get(self.collection_id, self.token_id).unwrap_or_else(|| ExtendedInfo {
+					display_flag: false,
+					report: ReportReason::None,
+					frozen: false
+				});
+				//unfreeze
+				info.frozen = false;
+				TokenExtendedInfo::<T>::insert(self.collection_id, self.token_id, info);
+			}
+		}
     }
 }

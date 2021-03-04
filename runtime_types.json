@@ -20,7 +20,8 @@
     },
     "ExtendedInfo": {
       "display_flag": "bool",
-      "report": "ReportReason"
+      "report": "ReportReason",
+      "frozen": "bool"
     },
     "TokenInfoOf": {
       "metadata": "Vec<u8>",
