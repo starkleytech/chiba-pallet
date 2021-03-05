@@ -1,5 +1,5 @@
 [package]
-name = "art-gallery-pallet"
+name = "pallet-gallery"
 description = "Art Gallery module that implements `Art Gallery` trait."
 license = "Apache-2.0"
 version = "0.4.0-dev.jam"

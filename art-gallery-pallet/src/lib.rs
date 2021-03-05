@@ -39,7 +39,7 @@ use frame_support::traits::{
 use pallet_atomic_swap::SwapAction;
 use sp_runtime::traits::Saturating;
 use frame_system::{ ensure_signed, ensure_root };
-pub use orml_nft::{self as nft};
+use orml_nft::{self as nft};
 // use pallet_atomic_swap::{self as atomic_swap};
 use sp_runtime::{ 	
 	RuntimeDebug,
