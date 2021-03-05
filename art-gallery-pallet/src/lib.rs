@@ -30,6 +30,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+mod benchmarking;
+
 use codec::{Decode, Encode};
 use frame_support::{Parameter, decl_error, decl_event, decl_module, decl_storage, ensure, fail, traits::ReservableCurrency};
 use frame_support::traits::{
