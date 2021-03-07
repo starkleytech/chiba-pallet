@@ -15,7 +15,7 @@ fn last_event() -> crate::mock::Event {
 benchmarks! {
 	create_collection {
     let caller: T::AccountId = whitelisted_caller();
-	}: create_collection(RawOrigin::Signed(caller.clone()), Vec::<u8>::default(), 0)
+	}: create_collection(RawOrigin::Signed(caller.clone()), Vec::<u8>::default(), ClassData::default())
 	verify {
     assert_eq!(
       last_event(),
@@ -25,7 +25,7 @@ benchmarks! {
 
 	mint {
     let caller: T::AccountId = whitelisted_caller();
-	}: mint(RawOrigin::Signed(caller.clone()), Default::default(), Vec::<u8>::default(), 0)
+	}: mint(RawOrigin::Signed(caller.clone()), Default::default(), Vec::<u8>::default(), TokenData::default())
 	verify {
     assert_eq!(
       last_event(),

@@ -49,7 +49,8 @@ use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, Member, Zero},
 	DispatchResult, };
 use sp_std::prelude::*;
-use sp_std::marker::PhantomData;
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
 //const PALLET_ID: LockIdentifier = *b"gallery ";
 
@@ -95,7 +96,18 @@ decl_error! {
 	}
 }
 
-pub trait Config: frame_system::Config + nft::Config + pallet_atomic_swap::Config {
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct ClassData {
+
+}
+
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct TokenData {
+
+} 
+pub trait Config: frame_system::Config + nft::Config<ClassData = ClassData, TokenData = TokenData> + pallet_atomic_swap::Config {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 	/// The currency trait.
 	type Currency: ReservableCurrency<Self::AccountId>;

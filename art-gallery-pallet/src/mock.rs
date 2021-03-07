@@ -71,8 +71,8 @@ impl pallet_balances::Config for Test {
 impl orml_nft::Config for Test {
 	type ClassId = u64;
 	type TokenId = u64;
-	type ClassData = u64;
-	type TokenData = u64;
+	type ClassData = pallet_gallery::ClassData;
+	type TokenData = pallet_gallery::TokenData;
 }
 
 parameter_types! {
