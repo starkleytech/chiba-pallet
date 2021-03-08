@@ -250,7 +250,7 @@ decl_event!(
 decl_storage! {
 	trait Store for Module<T: Config> as ArtGallery {
 		/// Curator address
-		pub Curator: T::AccountId;
+		pub Curator get(fn curator): T::AccountId;
 
 		/// Returns `None` if info not set or removed.
 		/// Should really be refactored to store this info in T::TokenData
