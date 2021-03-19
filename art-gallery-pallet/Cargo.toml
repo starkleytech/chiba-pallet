@@ -7,28 +7,28 @@ authors = ["Usetech"]
 edition = "2018"
 
 [dependencies]
-serde = { version = "1.0.123", optional = true }
+serde = { version = "1.0.123", default-features = false }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-sp-std = { version = "3.0.0", default-features = false }
-sp-runtime = { version = "3.0.0", default-features = false }
-sp-core = { version = "3.0.0", default-features = false }
-sp-io = { version = "3.0.0", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
 
-frame-benchmarking = { version = "3.0.0", default-features = false, optional = true }
-frame-support = { version = "3.0.0", default-features = false }
-frame-system = { version = "3.0.0", default-features = false }
-pallet-atomic-swap = { version = "3.0.0", default-features = false }
-orml-traits = { version = "0.4.0", default-features = false }
-orml-nft = { version = "0.4.0", default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false, optional = true }
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+pallet-atomic-swap = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+orml-traits = { git = "https://github.com/danforbes/open-runtime-module-library", branch = "master", default-features = false }
+orml-nft = { git = "https://github.com/danforbes/open-runtime-module-library", branch = "master", default-features = false }
 
 [dev-dependencies]
 #clear_on_drop = { version = "0.2.4", features = ["no_cc"] }	# https://github.com/paritytech/substrate/issues/4179
-pallet-balances = { version = "3.0.0" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "master" }
 
 [features]
 default = ["std"]
 std = [
-	"serde",
+	"serde/std",
 	"codec/std",
 	"sp-runtime/std",
 	"sp-io/std",

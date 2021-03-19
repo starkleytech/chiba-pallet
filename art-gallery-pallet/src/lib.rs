@@ -99,14 +99,15 @@ decl_error! {
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ClassData {
-
+	pub name: Vec<u8>
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct TokenData {
+	pub name: Vec<u8>
+}
 
-} 
 pub trait Config: frame_system::Config + nft::Config<ClassData = ClassData, TokenData = TokenData> + pallet_atomic_swap::Config {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 	/// The currency trait.
