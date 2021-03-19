@@ -2,14 +2,13 @@
 
 use super::*;
 
-use frame_benchmarking::{account, benchmarks, whitelisted_caller};
+use frame_benchmarking::{benchmarks, whitelisted_caller};
 use frame_system::RawOrigin;
-use sp_runtime::traits::Bounded;
 
-use crate::Module as Gallery;
+use crate::Pallet as Chiba;
 
 fn last_event() -> crate::mock::Event {
-    frame_system::Module::<crate::mock::Test>::events()
+    frame_system::Pallet::<crate::mock::Test>::events()
         .pop()
         .expect("Event expected")
         .event
@@ -20,7 +19,7 @@ benchmarks! {
         let curator: T::AccountId = whitelisted_caller();
     }: set_curator(RawOrigin::Root, curator.clone())
     verify {
-        assert_eq!(curator, Gallery::<T>::curator());
+        assert_eq!(curator, Chiba::<T>::curator());
     }
 
     create_collection {
@@ -29,55 +28,55 @@ benchmarks! {
     verify {
         assert_eq!(
             last_event(),
-            crate::mock::Event::pallet_gallery(crate::RawEvent::CollectionCreated(0)),
+            crate::mock::Event::chiba(crate::RawEvent::CollectionCreated(0)),
         );
     }
 
     mint {
         let caller: T::AccountId = whitelisted_caller();
-        Gallery::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default());
+        Chiba::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default())?;
     }: mint(RawOrigin::Signed(caller.clone()), Default::default(), Vec::<u8>::default(), TokenData::default())
     verify {
         assert_eq!(
             last_event(),
-            crate::mock::Event::pallet_gallery(crate::RawEvent::NFTCreated(0, 0)),
+            crate::mock::Event::chiba(crate::RawEvent::NFTCreated(0, 0)),
         );
     }
 
     // TODO: use non-default balance to appreciate
     appreciate {
         let caller: T::AccountId = whitelisted_caller();
-        Gallery::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default());
-        Gallery::<T>::mint(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Default::default(), Vec::<u8>::default(), TokenData::default());
+        Chiba::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default())?;
+        Chiba::<T>::mint(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Default::default(), Vec::<u8>::default(), TokenData::default())?;
     }: appreciate(RawOrigin::Signed(caller.clone()), Default::default(), Default::default(), Default::default())
     verify {
         assert_eq!(
           last_event(),
-          crate::mock::Event::pallet_gallery(crate::RawEvent::AppreciationReceived(0, 0, 0)),
+          crate::mock::Event::chiba(crate::RawEvent::AppreciationReceived(0, 0, 0)),
         );
     }
 
     toggle_display {
         let caller: T::AccountId = whitelisted_caller();
-        Gallery::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default());
-        Gallery::<T>::mint(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Default::default(), Vec::<u8>::default(), TokenData::default());
+        Chiba::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default())?;
+        Chiba::<T>::mint(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Default::default(), Vec::<u8>::default(), TokenData::default())?;
     }: appreciate(RawOrigin::Signed(caller.clone()), Default::default(), Default::default(), Default::default())
     verify {
         assert_eq!(
           last_event(),
-          crate::mock::Event::pallet_gallery(crate::RawEvent::AppreciationReceived(0, 0, 0)),
+          crate::mock::Event::chiba(crate::RawEvent::AppreciationReceived(0, 0, 0)),
         );
     }
 
     burn {
         let caller: T::AccountId = whitelisted_caller();
-        Gallery::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default());
-        Gallery::<T>::mint(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Default::default(), Vec::<u8>::default(), TokenData::default());
+        Chiba::<T>::create_collection(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Vec::<u8>::default(), ClassData::default())?;
+        Chiba::<T>::mint(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(caller.clone())), Default::default(), Vec::<u8>::default(), TokenData::default())?;
     }: burn(RawOrigin::Signed(caller.clone()), Default::default(), Default::default())
     verify {
         assert_eq!(
           last_event(),
-          crate::mock::Event::pallet_gallery(crate::RawEvent::NFTBurned(0, 0)),
+          crate::mock::Event::chiba(crate::RawEvent::NFTBurned(0, 0)),
         );
     }
 }

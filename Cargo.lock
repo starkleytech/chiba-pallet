@@ -1043,7 +1043,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 [[package]]
 name = "orml-nft"
 version = "0.4.1-dev"
-source = "git+https://github.com/chiba-studio/open-runtime-module-library?branch=master#6a04581aa389fac74ec4307a645c37c49964ec63"
+source = "git+https://github.com/chiba-studio/open-runtime-module-library?branch=master#2902f42ec85406c9e8687b6d6f0c1def5f9f778d"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -1056,7 +1056,7 @@ dependencies = [
 [[package]]
 name = "orml-traits"
 version = "0.4.1-dev"
-source = "git+https://github.com/chiba-studio/open-runtime-module-library?branch=master#6a04581aa389fac74ec4307a645c37c49964ec63"
+source = "git+https://github.com/chiba-studio/open-runtime-module-library?branch=master#2902f42ec85406c9e8687b6d6f0c1def5f9f778d"
 dependencies = [
  "frame-support",
  "funty",
@@ -1073,7 +1073,7 @@ dependencies = [
 [[package]]
 name = "orml-utilities"
 version = "0.4.1-dev"
-source = "git+https://github.com/chiba-studio/open-runtime-module-library?branch=master#6a04581aa389fac74ec4307a645c37c49964ec63"
+source = "git+https://github.com/chiba-studio/open-runtime-module-library?branch=master#2902f42ec85406c9e8687b6d6f0c1def5f9f778d"
 dependencies = [
  "frame-support",
  "funty",
