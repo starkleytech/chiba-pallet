@@ -23,8 +23,8 @@ frame-system = { git = "https://github.com/paritytech/substrate", branch = "mast
 
 # Chiba dependencies
 pallet-atomic-swap = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
-orml-nft = { git = "https://github.com/danforbes/open-runtime-module-library", branch = "master", default-features = false }
-orml-traits = { git = "https://github.com/danforbes/open-runtime-module-library", branch = "master", default-features = false }
+orml-nft = { git = "https://github.com/chiba-studio/open-runtime-module-library", branch = "master", default-features = false }
+orml-traits = { git = "https://github.com/chiba-studio/open-runtime-module-library", branch = "master", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "master" }
