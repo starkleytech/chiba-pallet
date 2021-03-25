@@ -1,5 +1,5 @@
 use crate::{self as chiba, ChibaSwapAction};
-use frame_support::parameter_types;
+use frame_support::{dispatch::DispatchResult, parameter_types};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
@@ -10,7 +10,6 @@ use sp_runtime::{
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
-// Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
     pub enum Test where
         Block = Block,
@@ -91,10 +90,50 @@ impl pallet_atomic_swap::Config for Test {
     type ProofLimit = ProofLimit;
 }
 
-// Build genesis storage according to the mock runtime.
+pub const ALICE: u64 = 221;
+pub const BOB: u64 = 1983;
+pub const CURATOR: u64 = 128;
+
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    system::GenesisConfig::default()
+    let mut storage = system::GenesisConfig::default()
         .build_storage::<Test>()
-        .unwrap()
-        .into()
+        .unwrap();
+
+    pallet_balances::GenesisConfig::<Test> {
+        balances: vec![(ALICE, 1 << 60), (BOB, 1 << 60)],
+    }
+    .assimilate_storage(&mut storage)
+    .unwrap();
+
+    let mut ext = sp_io::TestExternalities::new(storage);
+    ext.execute_with(|| {
+        System::set_block_number(1);
+    });
+
+    ext
+}
+
+pub fn last_event() -> crate::mock::Event {
+    frame_system::Pallet::<crate::mock::Test>::events()
+        .pop()
+        .expect("NO EVENTS")
+        .event
+}
+
+pub fn create_default_collection() -> DispatchResult {
+    Chiba::create_collection(
+        Origin::signed(ALICE),
+        Default::default(),
+        Default::default(),
+    )
+}
+
+pub fn mint_default_token() -> DispatchResult {
+    create_default_collection()?;
+    Chiba::mint(
+        Origin::signed(ALICE),
+        Default::default(),
+        Default::default(),
+        Default::default(),
+    )
 }

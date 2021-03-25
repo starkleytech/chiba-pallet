@@ -1,18 +1,11 @@
 #![cfg(feature = "runtime-benchmarks")]
 
 use super::*;
+use crate::mock::last_event;
+use crate::Pallet as Chiba;
 
 use frame_benchmarking::{account, benchmarks, whitelisted_caller};
 use frame_system::RawOrigin;
-
-use crate::Pallet as Chiba;
-
-fn last_event() -> crate::mock::Event {
-    frame_system::Pallet::<crate::mock::Test>::events()
-        .pop()
-        .expect("Event expected")
-        .event
-}
 
 benchmarks! {
     set_curator {

@@ -127,7 +127,7 @@ decl_module! {
 
         #[weight = T::BlockWeights::get().max_block / 100]
         pub fn set_curator(origin, curator: T::AccountId) -> DispatchResult {
-            let _ = ensure_root(origin)?;
+            ensure_root(origin)?;
             Curator::<T>::put(curator);
             Ok(())
         }
@@ -367,6 +367,8 @@ pub struct ChibaSwapAction<T: Config> {
     token_id: T::TokenId,
 }
 
+
+// TODO: how are these capabilities actually used?
 impl<T: Config> pallet_atomic_swap::SwapAction<<T as frame_system::Config>::AccountId, T>
     for ChibaSwapAction<T>
 {
