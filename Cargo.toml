@@ -1,9 +1,9 @@
 [package]
-name = "pallet-chiba"
-description = "Chiba Studio runtime module."
+name = "nft-factory-pallet"
+description = "Galital NFT pallet, forked and modified from chiba pallet"
 license = "Apache-2.0"
 version = "0.4.0-dev"
-authors = ["Usetech <hello@usetech.com>, Joshua Mir <https://github.com/joshua-mir>, Dan Forbes <dan@danforbes.dev>", Masterdubs <contact@masterdubs.io>]
+authors = ["Usetech <hello@usetech.com>, Joshua Mir <https://github.com/joshua-mir>, Dan Forbes <dan@danforbes.dev>, Masterdubs <contact@masterdubs.io>"]
 edition = "2018"
 
 [dependencies]
@@ -21,10 +21,10 @@ frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch =
 frame-support = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
-# Chiba dependencies
+# nft dependencies
 pallet-atomic-swap = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-orml-nft = { git = "https://github.com/chiba-studio/open-runtime-module-library", branch = "master", default-features = false }
-orml-traits = { git = "https://github.com/chiba-studio/open-runtime-module-library", branch = "master", default-features = false }
+orml-nft = { git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "master", default-features = false }
+orml-traits = { git = "https://github.com/open-web3-stack/open-runtime-module-library", branch = "master", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
