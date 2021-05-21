@@ -1,12 +1,3 @@
-//! # Chiba Studio
-//!
-//! Kusama's home for creators.
-//!
-//! ## Overview
-//!
-//! This pallet builds on top of the ORML NFT pallet and the FRAME Atomic Swap pallet to provide a
-//! home for creators in the Kusama Network.
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(test)]
@@ -40,6 +31,7 @@ pub struct ExtendedInfo {
     pub display_flag: bool,
     pub report: ReportReason,
     pub frozen: bool,
+    pub display_for_sale: bool,
 }
 
 #[derive(Encode, Decode, Debug, Clone, Eq, PartialEq)]
@@ -187,6 +179,31 @@ decl_module! {
             let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
                 display_flag: false,
                 report: ReportReason::None,
+                frozen: false,
+                display_for_sale: false
+            });
+
+            info.display_flag = display;
+            TokenExtendedInfo::<T>::insert(collection_id, token_id, info);
+            Self::deposit_event(RawEvent::TokenDisplayToggled(collection_id, token_id, display));
+            Ok(())
+        }
+
+        #[weight = T::BlockWeights::get().max_block / 100]
+        pub fn toggle_marketplace_listing(origin,
+            collection_id: T::ClassId,
+            token_id: T::TokenId,
+            display: bool,
+            for_sale: bool) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+            let token = nft::Pallet::<T>::tokens(collection_id, token_id).ok_or(Error::<T>::TokenNotFound)?;
+
+            ensure!(token.owner == who, Error::<T>::NotTokenOwner);
+
+            let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
+                display_flag: false,
+                display_for_sale: false,
+                report: ReportReason::None,
                 frozen: false
             });
 
@@ -209,7 +226,8 @@ decl_module! {
             let info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
                 display_flag: false,
                 report: ReportReason::None,
-                frozen: false
+                frozen: false,
+                display_for_sale: false
             });
 
             ensure!(info.frozen == false, Error::<T>::TokenFrozen);
@@ -244,7 +262,8 @@ decl_module! {
             let info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
                 display_flag: false,
                 report: ReportReason::None,
-                frozen: false
+                frozen: false,
+                display_for_sale: false
             });
 
             ensure!(info.frozen == false, Error::<T>::TokenFrozen);
@@ -288,7 +307,8 @@ decl_module! {
             let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
                 display_flag: false,
                 report: ReportReason::None,
-                frozen: false
+                frozen: false,
+                display_for_sale: false
             });
 
             info.report = reason.clone();
@@ -308,7 +328,8 @@ decl_module! {
             let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
                 display_flag: false,
                 report: ReportReason::None,
-                frozen: false
+                frozen: false,
+                display_for_sale: false
             });
 
             info.report = ReportReason::Reported;
@@ -327,7 +348,8 @@ decl_module! {
             let mut info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
                 display_flag: false,
                 report: ReportReason::None,
-                frozen: false
+                frozen: false,
+                display_for_sale: false
             });
 
             info.report = ReportReason::None;
@@ -347,7 +369,8 @@ decl_module! {
             let info = TokenExtendedInfo::<T>::get(collection_id, token_id).unwrap_or_else(|| ExtendedInfo {
                 display_flag: false,
                 report: ReportReason::None,
-                frozen: false
+                frozen: false,
+                display_for_sale: false
             });
 
             ensure!(info.frozen == false, Error::<T>::TokenFrozen);
@@ -384,6 +407,7 @@ impl<T: Config> pallet_atomic_swap::SwapAction<<T as frame_system::Config>::Acco
                     display_flag: false,
                     report: ReportReason::None,
                     frozen: false,
+                    display_for_sale: false
                 });
 
             // if token is already frozen, it is already being used in a swap!
@@ -427,6 +451,7 @@ impl<T: Config> pallet_atomic_swap::SwapAction<<T as frame_system::Config>::Acco
                         display_flag: false,
                         report: ReportReason::None,
                         frozen: false,
+                        display_for_sale: false
                     });
 
                 info.frozen = false;
