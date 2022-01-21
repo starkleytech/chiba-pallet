@@ -11,20 +11,20 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 serde = { version = "1.0.123", default-features = false }
 
 # Substrate core dependencies
-sp-core = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false }
-sp-io = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false }
-sp-runtime = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false }
-sp-std = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false }
 
 # FRAME dependencies
-frame-benchmarking = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false, optional = true }
-frame-support = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false }
-frame-system = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false, optional = true }
+frame-support = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false }
 
 # nft dependencies
-pallet-atomic-swap = { git = "https://github.com/starkleytech/substrate", branch = "master", default-features = false }
-orml-nft = { git = "https://github.com/starkleytech/open-runtime-module-library", branch = "master", default-features = false }
-orml-traits = { git = "https://github.com/starkleytech/open-runtime-module-library", branch = "master", default-features = false }
+pallet-atomic-swap = { git = "https://github.com/paritytech/substrate.git", tag = "v3.0.0", default-features = false }
+orml-nft = { git = "https://github.com/open-web3-stack/open-runtime-module-library", tag = "0.4.0", default-features = false }
+orml-traits = { git = "https://github.com/open-web3-stack/open-runtime-module-library", tag = "0.4.0", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/starkleytech/substrate", branch = "master" }
